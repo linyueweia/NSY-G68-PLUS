@@ -3,23 +3,26 @@ name: Build iStore OS 6.x
 on:
   repository_dispatch:
   workflow_dispatch:
-    inputs:
-      branch:
-        description: 'Branch to build'
-        required: false
-        default: 'main'
+    # inputs:
+      # ssh:
+        # description: 'SSH connection to Actions'
+        # required: false
+        # default: 'false'
+  schedule:
+   - cron: 0 16 * * *
 
 env:
   REPO_URL: https://github.com/istoreos/istoreos
+  # REPO_BRANCH: main
   FEEDS_CONF: feeds.conf
   CONFIG_FILE: .config
   DIY_P1_SH: diy-part1-6.x.sh
   DIY_P2_SH: diy-part2-6.x.sh
-  UPLOAD_BIN_DIR: 'true'
-  UPLOAD_FIRMWARE: 'true'
-  UPLOAD_RELEASE: 'true'
+  UPLOAD_BIN_DIR: true
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -27,11 +30,14 @@ jobs:
     strategy:
       matrix:
         REPO_BRANCH:
+          # - main
           - istoreos-24.10
+          # - istoreos-23.05
         ARCHITECTURE:
           - armv8
         os:
           - ubuntu-22.04
+
       fail-fast: false
 
     steps:
@@ -43,7 +49,7 @@ jobs:
         root-reserve-mb: 1024
 
     - name: 准备完成
-      uses: actions/checkout@v4
+      uses: actions/checkout@main
 
     - name: 创建工作目录
       run: |
@@ -63,7 +69,7 @@ jobs:
         echo -e "\n"
         echo -e "------------------------------- 磁盘信息 -------------------------------\n"
         echo -e "磁盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
-        echo "------------------------------- 磁盘详情 -------------------------------"
+        echo "------------------------------- 磁盘详情 -------------------------------\n"
         df -Th
 
     - name: 初始化编译环境
@@ -95,14 +101,11 @@ jobs:
         ln -sf ${{ env.WORKDIR_PATH }}/workdir/openwrt $GITHUB_WORKSPACE/openwrt
 
     - name: 缓存构建动作
-      uses: actions/cache@v4
+      uses: linyueweia/cachewrtbuild@main
       with:
-        path: |
-          ~/.cache/pip
-          ~/.ccache
-        key: ${{ matrix.os }}-${{ matrix.ARCHITECTURE }}-${{ matrix.REPO_BRANCH }}
-        restore-keys: |
-          ${{ matrix.os }}-${{ matrix.ARCHITECTURE }}-${{ matrix.REPO_BRANCH }}
+        ccache: false
+        mixkey: ${{ matrix.os }}-${{ matrix.ARCHITECTURE }}-${{ matrix.REPO_BRANCH }}
+        prefix: ${{ github.workspace }}/openwrt
 
     - name: 加载自定义 feeds
       env:
@@ -129,6 +132,13 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P2_SH
 
+    # - name: SSH 连接到 Actions
+      # uses: P3TERX/ssh2actions@main
+      # if: (github.event.inputs.ssh == 'true' && github.event.inputs.ssh  != 'false') || contains(github.event.action, 'ssh')
+      # env:
+        # TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        # TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+
     - name: 下载软件包
       id: package
       run: |
@@ -152,7 +162,7 @@ jobs:
       run: df -hT
 
     - name: 上传 bin 文件夹
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: OpenWrt_bin${{ env.FILE_DATE }}
@@ -168,7 +178,7 @@ jobs:
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: 上传固件目录
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: OpenWrt_firmware${{ env.FILE_DATE }}
@@ -195,12 +205,7 @@ jobs:
 
         🔒 密码: password
 
-        📒 说明: NSY-G68-PLUS (RK3568) 双GMAC固件
-        - eth0 = WAN (SGMII)
-        - eth1/br-lan = LAN (RGMII + RTL8367S)
-        - 4× LAN + 1× WAN
-        - 无 WiFi（内核级关闭）
-        " >> release.txt
+        📒 说明: 单网口设备默认网口为LAN，旁路由模式，需要接入主路由器后进后台查找对应IP地址访问，反之双网口设备默认网口为WAN+LAN，主路由模式。 " >> release.txt
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: 自动发布固件到 Releases
@@ -211,14 +216,16 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
-    - name: 删除旧的 workflow runs
-      if: always() && !cancelled()
-      run: |
-        gh run delete --repo ${{ github.repository }} --age 7days || true
+    - name: 删除运行记录
+      uses: linyueweia/delete-workflow-runs@main
+      with:
+        retain_days: 20
+        keep_minimum_runs: 15
+        token: ${{ env.GITHUB_TOKEN }}
 
     - name: 删除自动发布的旧固件
       uses: dev-drprasad/delete-older-releases@v0.3.3
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       with:
         keep_latest: 60
-        delete_tags: 'true'
+        delete_tags: true
