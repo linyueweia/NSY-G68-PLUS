@@ -30,11 +30,22 @@ chmod 755 package/base-files/files/bin/coremark.sh
 
 
 # iStoreOS-settings
-git clone --depth=1 -b main https://github.com/istoreos/istoreos-settings package/default-settings
+git clone --depth=1 -b main https://github.com/linyueweia/istoreos-settings package/default-settings
 
 
 # 定时限速插件
 git clone --depth=1 https://github.com/sirpdboy/luci-app-eqosplus package/luci-app-eqosplus
+
+
+# 增加bendian_bd-one
+echo -e "\\ndefine Device/bendian_bd-one
+\$(call Device/Legacy/rk3568,\$(1))
+  DEVICE_VENDOR := BENDIAN
+  DEVICE_MODEL := BD ONE
+  DEVICE_DTS := rk3568/rk3568-bendian-one
+  DEVICE_PACKAGES += kmod-nvme kmod-ata-ahci-dwc kmod-hwmon-pwmfan kmod-thermal kmod-r8169
+endef
+TARGET_DEVICES += bendian_bd-one" >> target/linux/rockchip/image/legacy.mk
 
 
 # 增加nsy_g68-plus
