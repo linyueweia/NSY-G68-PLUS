@@ -3,11 +3,6 @@ name: Build iStore OS 6.x
 on:
   repository_dispatch:
   workflow_dispatch:
-    # inputs:
-      # ssh:
-        # description: 'SSH connection to Actions'
-        # required: false
-        # default: 'false'
 
 env:
   REPO_URL: https://github.com/istoreos/istoreos
@@ -221,7 +216,7 @@ jobs:
         files: ${{ env.FIRMWARE }}/*
 
     - name: 删除运行记录
-      uses: ActionsRML/delete-workflow-runs@v2
+      uses: GitHubActionsRML/delete-workflow-runs@v2
       with:
         retain-days: 20
         keep-minimum-runs: 15
