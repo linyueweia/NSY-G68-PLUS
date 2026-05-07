@@ -211,11 +211,10 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
-    - name: 删除运行记录
-      uses: GitHubActionsRML/delete-workflow-runs@v2
-      with:
-        retain-days: 20
-        keep-minimum-runs: 15
+    - name: 删除旧的 workflow runs
+      if: always() && !cancelled()
+      run: |
+        gh run delete --repo ${{ github.repository }} --age 7days || true
 
     - name: 删除自动发布的旧固件
       uses: dev-drprasad/delete-older-releases@v0.3.3
