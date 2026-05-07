@@ -206,7 +206,12 @@ jobs:
 
         🔒 密码: password
 
-        📒 说明: 单网口设备默认网口为LAN，旁路由模式，需要接入主路由器后进后台查找对应IP地址访问，反之双网口设备默认网口为WAN+LAN，主路由模式。 " >> release.txt
+        📒 说明: NSY-G68-PLUS (RK3568) 双GMAC固件
+   - eth0 = WAN (SGMII → RTL8367S Port6)
+   - eth1/br-lan = LAN (RGMII → RTL8367S Port7 → bridge lan1-4)
+   - 4× LAN + 1× WAN
+   - 无 WiFi（内核级关闭）
+   - RTL8367S DSA 交换机驱动  " >> release.txt
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: 自动发布固件到 Releases
