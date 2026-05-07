@@ -33,6 +33,10 @@ jobs:
       fail-fast: false
 
     steps:
+    # === self-hosted: Ubuntu 20核 ===
+    # TODO: 回退时改为 runs-on: ubuntu-22.04，移除 #self-hosted 注释，恢复合并磁盘步骤
+    # === self-hosted end ===
+
     - name: 准备完成
       uses: actions/checkout@main
 
