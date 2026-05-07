@@ -22,7 +22,6 @@ jobs:
            content=$(cat ${GITHUB_WORKSPACE}/configfiles/config_data-6.x.txt)
            configdata=$(echo "$content" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
            echo -e "\\n$configdata" >> ./armv8/.config
-           # 清除.config配置文件里面重复的配置项
            configdata2=$(cat ./armv8/.config)
            echo "$configdata2" | awk '!seen[$0]++ && NF > 0' > ./armv8/.config
         else
@@ -46,7 +45,8 @@ jobs:
         commit_message: "Sync files"
 
     - name: 删除运行记录
-      uses: ActionsRML/delete-workflow-runs@v2
+      uses: linyueweia/delete-workflow-runs@main
       with:
-        retain-days: 20
-        keep-minimum-runs: 15
+        retain_days: 20
+        keep_minimum_runs: 15
+        token: ${{ secrets.ACCESS_TOKEN }}
