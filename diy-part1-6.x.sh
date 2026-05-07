@@ -22,29 +22,29 @@ if [ -z "$Releases_version" ]; then
 fi
 
 http_value=$(wget -qO- "https://downloads.openwrt.org/releases/${Releases_version}/targets/rockchip/armv8/kmods/")
-hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\)\/.*/\1/p' | head -1)
+hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\)/.*/\1/p' | head -1)
 
 if [ -z "$hash_value" ]; then
     http_value=$(wget -qO- "https://archive.openwrt.org/releases/${Releases_version}/targets/rockchip/armv8/kmods/")
-    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\)\/.*/\1/p' | head -1)
+    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\).*/\1/p' | head -1)
 fi
 
 if [ -z "$hash_value" ]; then
     http_value=$(wget -qO- "https://mirrors.tuna.tsinghua.edu.cn/openwrt/releases/${Releases_version}/targets/rockchip/armv8/kmods/")
-    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\)\/.*/\1/p' | head -1)
+    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\).*/\1/p' | head -1)
 fi
 
 if [ -z "$hash_value" ]; then
     http_value=$(wget -qO- "https://mirrors.cqupt.edu.cn/openwrt/releases/${Releases_version}/targets/rockchip/armv8/kmods/")
-    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\)\/.*/\1/p' | head -1)
+    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\).*/\1/p' | head -1)
 fi
 
 if [ -z "$hash_value" ]; then
     http_value=$(wget -qO- "https://mirrors.ustc.edu.cn/openwrt/releases/${Releases_version}/targets/rockchip/armv8/kmods/")
-    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\)\/.*/\1/p' | head -1)
+    hash_value=$(echo "$http_value" | sed -n 's/^.*-\([0-9a-f]\{32\}\).*/\1/p' | head -1)
 fi
 
-hash_value=${hash_value:-$(echo "$http_value" | sed -n 's/.*\([0-9a-f]\{32\}\)\/.*/\1/p' | head -1)}
+hash_value=${hash_value:-$(echo "$http_value" | sed -n 's/.*\([0-9a-f]\{32\}\).*/\1/p' | head -1)}
 if [ -n "$hash_value" ] && [[ "$hash_value" =~ ^[0-9a-f]{32}$ ]]; then
     echo "$hash_value" > .vermagic
     echo "kernel内核md5校验码：$hash_value"
@@ -57,7 +57,6 @@ fi
 date_version=$(date +"%Y%m%d%H")
 echo $date_version > version
 
-# 为iStoreOS固件版本加上编译作者
-author="linyueweia"
-sed -i "s/DISTRIB_DESCRIPTION.*/DISTRIB_DESCRIPTION='%D %V ${date_version} by ${author}'/g" package/base-files/files/etc/openwrt_release
-sed -i "s/OPENWRT_RELEASE.*/OPENWRT_RELEASE=\"%D %V ${date_version} by ${author}\"/g" package/base-files/files/usr/lib/os-release
+# 为iStoreOS固件版本加上日期
+sed -i "s/DISTRIB_DESCRIPTION.*/DISTRIB_DESCRIPTION='%D %V ${date_version}'/g" package/base-files/files/etc/openwrt_release
+sed -i "s/OPENWRT_RELEASE.*/OPENWRT_RELEASE=\"%D %V ${date_version}\"/g" package/base-files/files/usr/lib/os-release
