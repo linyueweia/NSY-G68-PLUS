@@ -22,6 +22,7 @@ env:
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
+  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -59,16 +60,16 @@ jobs:
     - name: 检查服务器配置
       run: |
         echo "若分配的服务器性能不足，务必及时取消，重新运行！"
-        echo -e "------------------------------- CPU信息 -------------------------------\n"
+        echo -e "------------------------------- CPU信息 ---\n"
         echo "CPU物理数量:$(cat /proc/cpuinfo| grep "physical id"| sort| uniq| wc -l)"
         echo -e "CPU核心及版本信息: $(cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq -c) \n"
-        echo -e "------------------------------- 内存信息 -------------------------------\n"
+        echo -e "------------------------------- 内存信息 ---\n"
         echo "已安装内存详细信息: "
         sudo lshw -short -C memory | grep GiB
         echo -e "\n"
-        echo -e "------------------------------- 磁盘信息 -------------------------------\n"
+        echo -e "------------------------------- 磁盘信息 ---\n"
         echo -e "磁盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
-        echo "------------------------------- 磁盘详情 -------------------------------"
+        echo "------------------------------- 磁盘详情 ---"
         df -Th
 
     - name: 初始化编译环境
@@ -207,6 +208,14 @@ jobs:
         📒 说明: 单网口设备默认网口为LAN，旁路由模式，需要接入主路由器后进后台查找对应IP地址访问，反之双网口设备默认网口为WAN+LAN，主路由模式。 " >> release.txt
         echo "status=success" >> ${GITHUB_OUTPUT}
 
+    - name: 确认固件文件存在
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      run: |
+        echo "=== 固件目录内容 ==="
+        ls -la ${{ env.FIRMWARE }}/
+        echo "=== 文件数量 ==="
+        ls ${{ env.FIRMWARE }}/* | wc -l
+
     - name: 自动发布固件到 Releases
       uses: softprops/action-gh-release@v2
       if: steps.tag.outputs.status == 'success' && !cancelled()
@@ -214,12 +223,15 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+        overwrite: true
+        token: ${{ secrets.ACCESS_TOKEN }}
 
     - name: 删除运行记录
       uses: linyueweia/delete-workflow-runs@main
       with:
         retain_days: 20
         keep_minimum_runs: 15
+        token: ${{ secrets.ACCESS_TOKEN }}
 
     - name: 删除自动发布的旧固件
       uses: dev-drprasad/delete-older-releases@v0.3.3
@@ -227,3 +239,4 @@ jobs:
       with:
         keep_latest: 60
         delete_tags: true
+        token: ${{ secrets.ACCESS_TOKEN }}
