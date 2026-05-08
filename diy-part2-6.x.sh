@@ -84,3 +84,6 @@ ls target/linux/rockchip/patches-6.6/
 # 复制dts设备树文件到指定目录下
 cp -a $GITHUB_WORKSPACE/configfiles/dts/rk3568/* target/linux/rockchip/dts/rk3568/
 cp -a $GITHUB_WORKSPACE/configfiles/dts/rk3588/* target/linux/rockchip/dts/rk3588/
+
+# 强制只编译nsy_g68-plus，覆盖SDK默认的所有TARGET_DEVICES
+echo "TARGET_DEVICES:=nsy_g68-plus" >> target/linux/rockchip/image/legacy.mk
