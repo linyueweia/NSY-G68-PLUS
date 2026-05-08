@@ -22,7 +22,6 @@ env:
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
-  GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
 jobs:
   build:
@@ -53,8 +52,8 @@ jobs:
 
     - name: 创建工作目录
       run: |
-        mkdir -p ${GITHUB_WORKSPACE}/workdir
-        chmod 755 ${GITHUB_WORKSPACE}/workdir
+        mkdir -p ${GITHUB_WORKSPACE}/workdir/
+        chmod 755 ${GITHUB_WORKSPACE}/workdir/
         echo "WORKDIR_PATH=$PWD" >> $GITHUB_ENV
 
     - name: 检查服务器配置
@@ -69,7 +68,7 @@ jobs:
         echo -e "\n"
         echo -e "------------------------------- 磁盘信息 -------------------------------\n"
         echo -e "磁盘数量: $(ls /dev/sd* | grep -v [1-9] | wc -l) \n"
-        echo "------------------------------- 磁盘详情 -------------------------------\n"
+        echo "------------------------------- 磁盘详情 -------------------------------"
         df -Th
 
     - name: 初始化编译环境
@@ -221,7 +220,6 @@ jobs:
       with:
         retain_days: 20
         keep_minimum_runs: 15
-        token: ${{ env.GITHUB_TOKEN }}
 
     - name: 删除自动发布的旧固件
       uses: dev-drprasad/delete-older-releases@v0.3.3
